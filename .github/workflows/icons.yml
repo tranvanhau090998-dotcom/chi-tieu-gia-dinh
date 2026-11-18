@@ -1,0 +1,36 @@
+name: icons
+on:
+  push:
+    paths: ['.github/workflows/icons.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  icons:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pillow
+      - run: |
+          python - <<'EOF'
+          from PIL import Image, ImageDraw, ImageFont
+          def make(size, path):
+              S = size * 4
+              im = Image.new('RGB', (S, S), '#1f3864')
+              d = ImageDraw.Draw(im)
+              c = S / 2
+              r = S * 0.34
+              d.ellipse([c - r, c - r, c + r, c + r], fill='#1b8a4b', outline='white', width=int(S * 0.025))
+              f = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', int(S * 0.42))
+              d.text((c, c), '₫', font=f, fill='white', anchor='mm')
+              im.resize((size, size), Image.LANCZOS).save(path)
+          make(192, 'icon-192.png')
+          make(512, 'icon-512.png')
+          make(180, 'apple-touch-icon.png')
+          EOF
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add *.png
+          git commit -m "Add icons" || exit 0
+          git push
