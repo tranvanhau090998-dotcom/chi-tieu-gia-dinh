@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chi tiêu gia đình</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f3864">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chi tiêu">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<style>
+*{-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6fa;color:#1f2a44}
+.wrap{max-width:480px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(40px + env(safe-area-inset-bottom))}
+h1{font-size:20px;margin:6px 2px 12px}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.lbl{font-size:15px;color:#5b6786}
+.big{font-size:36px;font-weight:700;margin:4px 0}
+.ok{color:#1b8a4b}.bad{color:#c62828}
+.bar{height:12px;background:#e3e8f2;border-radius:6px;overflow:hidden;margin-top:10px}
+.fill{height:100%;background:#1f3864;border-radius:6px}
+.fill.red{background:#c62828}
+input[type=text],input[type=tel]{width:100%;box-sizing:border-box;font-size:22px;padding:12px;border:2px solid #cfd6e6;border-radius:12px;margin-top:8px}
+input.small{font-size:17px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.cat{padding:14px 6px;font-size:16px;border:2px solid #cfd6e6;background:#fff;color:#1f2a44;border-radius:12px}
+.cat.sel{background:#1f3864;color:#fff;border-color:#1f3864}
+.go{width:100%;margin-top:14px;padding:16px;font-size:20px;font-weight:700;background:#1b8a4b;color:#fff;border:0;border-radius:14px}
+.go:disabled{background:#9db8a9}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #edf0f6}
+.row:first-of-type{border-top:0}
+.row small{color:#5b6786;display:block}
+.del{border:0;background:#fdecec;color:#c62828;border-radius:8px;padding:8px 10px;margin-left:8px;font-size:14px}
+.msg{min-height:22px;margin-top:10px;font-size:16px;font-weight:700;text-align:center}
+.empty{color:#5b6786;font-size:15px}
+.h{font-size:18px;font-weight:700;margin:0 0 8px}
+.sub{font-size:15px;font-weight:700;margin:16px 0 6px;color:#1f3864}
+.mini{height:8px;background:#e3e8f2;border-radius:4px;overflow:hidden;margin-top:6px}
+.mini div{height:100%;background:#1f3864}
+.day{padding:10px 0;border-top:1px solid #edf0f6}
+.dayhead{display:flex;justify-content:space-between;align-items:center;font-size:16px}
+.det{margin:6px 0 0 4px;padding-left:10px;border-left:3px solid #e3e8f2}
+.det div{display:flex;justify-content:space-between;font-size:15px;padding:4px 0}
+.tip{background:#eef6f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:15px;line-height:1.4}
+.tip.w{background:#fdf0e3}
+.kv{display:flex;justify-content:space-between;padding:6px 0;font-size:16px}
+</style></head><body><div class="wrap">
+<h1>Chi tiêu gia đình</h1>
+
+<div class="card">
+  <div class="lbl">Hôm nay còn được chi</div>
+  <div class="big" id="left">...</div>
+  <div class="lbl" id="leftSub"></div>
+</div>
+
+<div class="card">
+  <div class="lbl">Tháng này</div>
+  <div class="big" style="font-size:26px" id="mSpent">...</div>
+  <div class="bar"><div class="fill" id="mBar" style="width:0%"></div></div>
+  <div class="lbl" id="mSub" style="margin-top:8px"></div>
+</div>
+
+<div class="card">
+  <div style="font-size:18px;font-weight:700">Ghi khoản chi</div>
+  <input type="tel" id="amt" inputmode="numeric" placeholder="Số tiền (đồng)" autocomplete="off">
+  <div class="grid" id="cats"></div>
+  <input type="text" class="small" id="note" placeholder="Ghi chú (không bắt buộc)" autocomplete="off">
+  <button class="go" id="go">Ghi chi tiêu</button>
+  <div class="msg" id="msg"></div>
+</div>
+
+<div class="card">
+  <div style="font-size:18px;font-weight:700;margin-bottom:6px">Hôm nay đã chi</div>
+  <div id="items"></div>
+</div>
+
+<div class="card">
+  <div style="font-size:18px;font-weight:700;margin-bottom:6px">Nhóm cần chú ý</div>
+  <div id="warn"></div>
+</div>
+
+<div class="card">
+  <div class="h">Tổng kết chi tiêu trong tháng</div>
+  <div id="sum"></div>
+</div>
+
+<div class="card">
+  <div class="h">Ngân sách chia theo nhóm</div>
+  <div id="grp"></div>
+</div>
+
+<div class="card">
+  <div class="h">Thống kê chi tiêu</div>
+  <div class="sub">Chi theo nhóm</div>
+  <div id="stCats"></div>
+  <div class="sub">Chi theo ngày (bấm vào ngày để xem chi tiết)</div>
+  <div id="stDays"></div>
+</div>
+
+<div class="card">
+  <div class="h">Có thể tiết kiệm thêm</div>
+  <div id="tips"></div>
+</div>
+
+<div class="card">
+  <div class="h">So sánh 3 tháng</div>
+  <div id="three"></div>
+</div>
+
+</div>
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbxDbZNTkfuPfZ-FWnsgWsbxh3UB5NnuxYfdLDf-Ni_9sr1lEiomQVDjH1UIkqsPVUlz/exec';
+function Runner(){ this.s = function(){}; this.f = function(){}; }
+Runner.prototype.withSuccessHandler = function(fn){ this.s = fn; return this; };
+Runner.prototype.withFailureHandler = function(fn){ this.f = fn; return this; };
+Runner.prototype._do = function(p){
+  var self = this;
+  var req = p.action === 'data' ? fetch(API + '?action=data') : fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) });
+  req.then(function(r){ return r.json(); }).then(function(j){
+    if (j && j.error) self.f({ message: j.error }); else self.s(j);
+  }).catch(function(){ self.f({ message: 'Không kết nối được. Kiểm tra mạng rồi thử lại.' }); });
+};
+Runner.prototype.getData = function(){ this._do({ action: 'data' }); };
+Runner.prototype.addExpense = function(note, cat, amount){ this._do({ action: 'add', note: note, cat: cat, amount: amount }); };
+Runner.prototype.deleteExpense = function(row, ts){ this._do({ action: 'delete', row: row, ts: ts }); };
+var google = { script: {} };
+Object.defineProperty(google.script, 'run', { get: function(){ return new Runner(); } });
+if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+var DATA = null, SEL = '', pendingDel = '';
+function fmt(n){ return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+function render(d){
+  DATA = d;
+  var left = d.daily - d.todayTotal;
+  var L = el('left');
+  if (left >= 0){ L.className = 'big ok'; L.textContent = fmt(left) + ' đ'; }
+  else { L.className = 'big bad'; L.textContent = 'Vượt ' + fmt(-left) + ' đ'; }
+  el('leftSub').textContent = 'Đã chi ' + fmt(d.todayTotal) + ' đ, mức mỗi ngày ' + fmt(d.daily) + ' đ';
+
+  var pct = d.budget > 0 ? d.monthTotal / d.budget : 0;
+  el('mSpent').textContent = fmt(d.monthTotal) + ' / ' + fmt(d.budget) + ' đ';
+  var bar = el('mBar');
+  bar.style.width = Math.min(100, pct * 100) + '%';
+  bar.className = pct > 1 ? 'fill red' : 'fill';
+  var rest = d.budget - d.monthTotal;
+  el('mSub').textContent = (rest >= 0 ? 'Còn lại ' + fmt(rest) + ' đ' : 'Đã vượt ' + fmt(-rest) + ' đ') + ' (' + Math.round(pct * 100) + '% ngân sách)';
+
+  var box = el('cats');
+  if (!box.children.length){
+    d.cats.forEach(function(c){
+      var b = document.createElement('button');
+      b.className = 'cat'; b.type = 'button'; b.textContent = c.name;
+      b.onclick = function(){ SEL = c.name; Array.prototype.forEach.call(box.children, function(x){ x.className = 'cat' + (x.textContent === SEL ? ' sel' : ''); }); };
+      box.appendChild(b);
+    });
+  }
+
+  var it = el('items');
+  if (!d.items.length){ it.innerHTML = '<div class="empty">Chưa có khoản nào hôm nay.</div>'; }
+  else {
+    it.innerHTML = d.items.map(function(x){
+      var key = x.row + '_' + x.ts;
+      var label = pendingDel === key ? 'Bấm lại để xóa' : 'Xóa';
+      return '<div class="row"><div><b>' + esc(x.cat) + '</b>' + (x.note ? ' - ' + esc(x.note) : '') + '<small>' + x.time + '</small></div>' +
+        '<div style="white-space:nowrap"><b>' + fmt(x.amount) + '</b><button class="del" data-r="' + x.row + '" data-t="' + x.ts + '">' + label + '</button></div></div>';
+    }).join('');
+    Array.prototype.forEach.call(it.querySelectorAll('.del'), function(b){
+      b.onclick = function(){
+        var key = b.getAttribute('data-r') + '_' + b.getAttribute('data-t');
+        if (pendingDel !== key){ pendingDel = key; render(DATA); return; }
+        pendingDel = '';
+        google.script.run.withSuccessHandler(render).withFailureHandler(fail).deleteExpense(Number(b.getAttribute('data-r')), Number(b.getAttribute('data-t')));
+      };
+    });
+  }
+
+  var w = d.cats.filter(function(c){ return c.name !== 'Tiết kiệm' && c.limit > 0 && c.spent / c.limit >= d.warn; });
+  el('warn').innerHTML = w.length ? w.map(function(c){
+    var p = Math.round(c.spent / c.limit * 100);
+    return '<div class="row"><div><b>' + esc(c.name) + '</b><small>' + fmt(c.spent) + ' / ' + fmt(c.limit) + ' đ</small></div><div class="' + (p > 100 ? 'bad' : '') + '"><b>' + p + '%</b>' + (p > 100 ? ' vượt' : '') + '</div></div>';
+  }).join('') : '<div class="empty">Chưa có nhóm nào gần hết hạn mức.</div>';
+  renderStats(d);
+  renderThree(d);
+  renderSummary(d);
+}
+
+var OPEN = {};
+var FLEX = ['Mua sắm', 'Cá nhân', 'Biếu hiếu', 'Ăn uống', 'Đi lại'];
+
+function renderStats(d){
+  var m = d.month || [];
+  var total = d.monthTotal;
+  var dn = Math.max(1, d.dayNow);
+  var avg = total / dn;
+  var proj = avg * d.days;
+  var _st =
+    '<div class="kv"><span>Đã chi cả tháng</span><b>' + fmt(total) + ' đ</b></div>' +
+    '<div class="kv"><span>Trung bình mỗi ngày</span><b>' + fmt(avg) + ' đ</b></div>' +
+    '<div class="kv"><span>Nếu giữ nhịp này, cả tháng</span><b class="' + (proj > d.budget ? 'bad' : 'ok') + '">' + fmt(proj) + ' đ</b></div>' +
+    '<div class="kv"><span>Ngân sách tháng</span><b>' + fmt(d.budget) + ' đ</b></div>';
+
+  var byCat = {};
+  m.forEach(function(x){ byCat[x.cat || 'Chưa chọn nhóm'] = (byCat[x.cat || 'Chưa chọn nhóm'] || 0) + x.amount; });
+  var names = Object.keys(byCat).sort(function(a, b){ return byCat[b] - byCat[a]; });
+  el('stCats').innerHTML = names.length ? names.map(function(n){
+    var p = total > 0 ? byCat[n] / total * 100 : 0;
+    return '<div style="margin-bottom:10px"><div class="dayhead"><span>' + esc(n) + '</span><b>' + fmt(byCat[n]) + ' đ (' + Math.round(p) + '%)</b></div><div class="mini"><div style="width:' + p + '%"></div></div></div>';
+  }).join('') : '<div class="empty">Chưa có khoản chi nào trong tháng.</div>';
+
+  var byDay = {};
+  m.forEach(function(x){ (byDay[x.k] = byDay[x.k] || []).push(x); });
+  var keys = Object.keys(byDay).sort().reverse();
+  var allDays = [];
+  for (var dd = Math.min(d.dayNow, d.days); dd >= 1; dd--) allDays.push(d.monthKey + '-' + (dd < 10 ? '0' + dd : dd));
+  el('stDays').innerHTML = allDays.length ? allDays.map(function(k){
+    var arr = byDay[k] || [], sum = 0;
+    arr.forEach(function(x){ sum += x.amount; });
+    var label = k.substring(8, 10) + '/' + k.substring(5, 7);
+    var over = d.daily > 0 && sum > d.daily;
+    var det = OPEN[k] ? '<div class="det">' + arr.slice().reverse().map(function(x){
+      return '<div><span>' + x.t + ' ' + esc(x.cat) + (x.note ? ' - ' + esc(x.note) : '') + '</span><b>' + fmt(x.amount) + '</b></div>';
+    }).join('') + '</div>' : '';
+    return '<div class="day" data-k="' + k + '"><div class="dayhead" style="cursor:pointer"><span>' + label + (OPEN[k] ? ' ▲' : ' ▼') + '</span><b class="' + (over ? 'bad' : '') + '">' + fmt(sum) + ' đ' + '</b></div><div class="lbl" style="font-size:13px">Tối đa ' + fmt(d.daily) + ' đ · ' + (d.daily - sum >= 0 ? 'còn ' : 'vượt ') + fmt(Math.abs(d.daily - sum)) + ' đ · ' + (sum === 0 ? 'chưa ghi chi' : (over ? 'vượt mức' : 'trong mức')) + '</div>' + det + '</div>';
+  }).join('') : '<div class="empty">Chưa có ngày nào có chi tiêu.</div>';
+  Array.prototype.forEach.call(el('stDays').querySelectorAll('.day'), function(n){
+    n.onclick = function(){ var k = n.getAttribute('data-k'); OPEN[k] = !OPEN[k]; renderStats(DATA); };
+  });
+
+  var tips = [];
+  if (total <= 0){
+    tips.push(['', 'Ghi chi tiêu vài ngày, ứng dụng sẽ tự đưa gợi ý dựa trên số liệu thật.']);
+  } else {
+    d.cats.forEach(function(c){
+      if (c.name !== 'Tiết kiệm' && c.limit > 0 && c.spent > c.limit)
+        tips.push(['w', c.name + ' đã vượt hạn mức ' + fmt(c.spent - c.limit) + ' đ. Nên dừng chi thêm vào nhóm này trong tháng.']);
+    });
+    var remDays = d.days - d.dayNow;
+    if (proj > d.budget){
+      var left = d.budget - total;
+      if (left > 0 && remDays > 0) tips.push(['w', 'Nếu giữ nhịp hiện tại sẽ vượt ngân sách. Để không vượt, từ nay mỗi ngày chỉ nên chi tối đa ' + fmt(left / remDays) + ' đ.']);
+      else if (left <= 0) tips.push(['w', 'Đã hết ngân sách tháng này. Các khoản còn lại nên chỉ dành cho việc thật cần thiết.']);
+    }
+    var flex = names.filter(function(n){ return FLEX.indexOf(n) >= 0; });
+    if (flex.length){
+      var top = flex[0];
+      var save = byCat[top] * 0.2;
+      tips.push(['', top + ' là nhóm có thể giảm được và đang tốn nhất (' + fmt(byCat[top]) + ' đ, ' + Math.round(byCat[top] / total * 100) + '% tổng chi). Giảm 20% sẽ tiết kiệm khoảng ' + fmt(save) + ' đ mỗi tháng (đây là ước tính, không phải số đã tiết kiệm).']);
+    }
+    var maxDay = keys.slice().sort(function(a, b){
+      var sa = 0, sb = 0; byDay[a].forEach(function(x){ sa += x.amount; }); byDay[b].forEach(function(x){ sb += x.amount; }); return sb - sa;
+    })[0];
+    if (maxDay){
+      var ms = 0; byDay[maxDay].forEach(function(x){ ms += x.amount; });
+      if (keys.length >= 3 && ms > avg * 1.5) tips.push(['', 'Ngày ' + maxDay.substring(8, 10) + '/' + maxDay.substring(5, 7) + ' chi nhiều nhất (' + fmt(ms) + ' đ), gấp khoảng ' + (ms / avg).toFixed(1).replace('.', ',') + ' lần trung bình ngày. Xem lại ngày này có khoản nào không cần thiết.']);
+    }
+    if (!tips.length) tips.push(['', 'Chi tiêu đang trong mức đặt ra. Giữ nhịp này và nhớ trích phần tiết kiệm đầu tháng.']);
+  }
+  el('tips').innerHTML = tips.map(function(t){ return '<div class="tip ' + t[0] + '">' + esc(t[1]) + '</div>'; }).join('');
+}
+
+function renderSummary(d){
+  var s = d.sum || {};
+  var kv = function(a, b, c){ return '<div class="kv"><span>' + a + '</span><b class="' + (c || '') + '">' + b + '</b></div>'; };
+  el('sum').innerHTML =
+    kv('Đã chi trong tháng', fmt(s.spent) + ' đ') +
+    kv('Ngân sách tháng', fmt(s.budget) + ' đ') +
+    kv('Còn lại', fmt(s.left) + ' đ', s.left < 0 ? 'bad' : '') +
+    kv('Đã dùng ngân sách', (s.pct * 100).toFixed(1).replace('.', ',') + '%') +
+    kv('Số ngày đã qua trong tháng', s.days + ' ngày') +
+    kv('Trung bình chi mỗi ngày', fmt(s.avg) + ' đ') +
+    kv('Mức chi tối đa mỗi ngày', fmt(s.max) + ' đ') +
+    kv('Nếu giữ nhịp này, cả tháng sẽ chi', fmt(s.proj) + ' đ', s.proj > s.budget ? 'bad' : 'ok') +
+    kv('Đánh giá', esc(s.verdict), /vượt/i.test(s.verdict) ? 'bad' : 'ok');
+  var tr = 0, tl = 0, td = 0, ts = 0, tf = 0;
+  var html = d.cats.map(function(c){
+    tr += c.ratio; tl += c.limit; td += c.daily; ts += c.spent; tf += c.left;
+    var p = c.limit > 0 ? c.spent / c.limit * 100 : 0;
+    return '<div style="padding:10px 0;border-top:1px solid #edf0f6"><div class="dayhead"><b>' + esc(c.name) + '</b><span>' + Math.round(c.ratio * 100) + '% ngân sách</span></div>' +
+      '<div class="mini"><div style="width:' + Math.min(100, p) + '%;' + (p > 100 ? 'background:#c62828' : '') + '"></div></div>' +
+      '<div class="kv" style="font-size:14px"><span>Hạn mức tháng / ngày</span><b>' + fmt(c.limit) + ' / ' + fmt(c.daily) + ' đ</b></div>' +
+      '<div class="kv" style="font-size:14px"><span>Đã chi / Còn lại</span><b>' + fmt(c.spent) + ' / ' + fmt(c.left) + ' đ</b></div>' +
+      '<div class="lbl" style="font-size:14px">' + Math.round(p) + '% hạn mức · ' + esc(c.remark) + '</div></div>';
+  }).join('');
+  html += '<div style="padding:10px 0;border-top:2px solid #cfd6e6"><div class="dayhead"><b>Tổng</b><span>' + Math.round(tr * 100) + '%</span></div>' +
+    '<div class="kv" style="font-size:14px"><span>Hạn mức tháng / ngày</span><b>' + fmt(tl) + ' / ' + fmt(td) + ' đ</b></div>' +
+    '<div class="kv" style="font-size:14px"><span>Đã chi / Còn lại</span><b>' + fmt(ts) + ' / ' + fmt(tf) + ' đ</b></div>';
+  var un = d.monthTotal - ts;
+  if (un > 0) html += '<div class="lbl" style="font-size:14px">Chi chưa chọn nhóm: ' + fmt(un) + ' đ</div>';
+  html += '</div>';
+  el('grp').innerHTML = html;
+}
+
+function renderThree(d){
+  var t = d.three, box = el('three');
+  if (!t){ box.innerHTML = '<div class="empty">Chưa có số liệu.</div>'; return; }
+  var html = '';
+  for (var i = 2; i >= 0; i--){
+    var has = t.budget[i] > 0;
+    var p = has ? t.spent[i] / t.budget[i] * 100 : 0;
+    html += '<div style="margin-bottom:12px"><div class="dayhead"><span>Tháng ' + esc(t.months[i]) + '</span><b>' + fmt(t.spent[i]) + (has ? ' / ' + fmt(t.budget[i]) : '') + ' đ</b></div>' +
+      (has ? '<div class="mini"><div style="width:' + Math.min(100, p) + '%"></div></div>' : '') + '</div>';
+  }
+  var any = t.cats.filter(function(c){ return c.v[0] + c.v[1] + c.v[2] > 0; });
+  html += '<div class="sub">Chi theo nhóm (đồng)</div>';
+  if (!any.length){ html += '<div class="empty">Chưa có khoản chi nào trong 3 tháng.</div>'; }
+  else {
+    html += '<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="color:#5b6786"><td></td>' + [0, 1, 2].map(function(j){ return '<td style="text-align:right;padding:4px 0">T' + esc(String(t.months[j]).substring(0, 2)) + '</td>'; }).join('') + '</tr>' +
+      any.map(function(c){ return '<tr style="border-top:1px solid #edf0f6"><td style="padding:6px 0">' + esc(c.name) + '</td>' + c.v.map(function(x){ return '<td style="text-align:right">' + (x ? fmt(x) : '-') + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>';
+  }
+  box.innerHTML = html;
+}
+
+function fail(e){
+  var m = el('msg'); m.className = 'msg bad';
+  m.textContent = (e && e.message) ? e.message : 'Có lỗi, thử lại';
+  el('go').disabled = false;
+}
+
+el('amt').addEventListener('input', function(){
+  var v = this.value.replace(/\D/g, '');
+  this.value = v ? fmt(Number(v)) : '';
+});
+
+el('go').onclick = function(){
+  var amount = Number(el('amt').value.replace(/\D/g, ''));
+  var m = el('msg'); m.className = 'msg';
+  if (!(amount > 0)){ m.className = 'msg bad'; m.textContent = 'Nhập số tiền'; return; }
+  if (!SEL){ m.className = 'msg bad'; m.textContent = 'Chọn nhóm chi tiêu'; return; }
+  var btn = el('go'); btn.disabled = true; m.textContent = 'Đang ghi...';
+  google.script.run.withSuccessHandler(function(d){
+    render(d);
+    el('amt').value = ''; el('note').value = ''; SEL = '';
+    Array.prototype.forEach.call(el('cats').children, function(x){ x.className = 'cat'; });
+    btn.disabled = false; m.className = 'msg ok'; m.textContent = 'Đã ghi ' + fmt(amount) + ' đ';
+  }).withFailureHandler(fail).addExpense(el('note').value, SEL, amount);
+};
+
+google.script.run.withSuccessHandler(render).withFailureHandler(fail).getData();
+</script></body></html>
