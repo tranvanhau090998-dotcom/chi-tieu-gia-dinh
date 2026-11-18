@@ -278,9 +278,9 @@ function renderSummary(d){
     kv('Đánh giá', esc(s.verdict), /vượt/i.test(s.verdict) ? 'bad' : 'ok');
   var tr = 0, tl = 0, td = 0, ts = 0, tf = 0;
   var html = d.cats.map(function(c){
-    tr += c.ratio; tl += c.limit; td += c.daily; ts += c.spent; tf += c.left;
+    var sh = d.budget > 0 ? c.limit / d.budget : 0; tr += sh; tl += c.limit; td += c.daily; ts += c.spent; tf += c.left;
     var p = c.limit > 0 ? c.spent / c.limit * 100 : 0;
-    return '<div style="padding:10px 0;border-top:1px solid #edf0f6"><div class="dayhead"><b>' + esc(c.name) + '</b><span>' + Math.round(c.ratio * 100) + '% ngân sách</span></div>' +
+    return '<div style="padding:10px 0;border-top:1px solid #edf0f6"><div class="dayhead"><b>' + esc(c.name) + '</b><span>' + Math.round(sh * 100) + '% ngân sách</span></div>' +
       '<div class="mini"><div style="width:' + Math.min(100, p) + '%;' + (p > 100 ? 'background:#c62828' : '') + '"></div></div>' +
       '<div class="kv" style="font-size:14px"><span>Hạn mức tháng / ngày</span><b>' + fmt(c.limit) + ' / ' + fmt(c.daily) + ' đ</b></div>' +
       '<div class="kv" style="font-size:14px"><span>Đã chi / Còn lại</span><b>' + fmt(c.spent) + ' / ' + fmt(c.left) + ' đ</b></div>' +
