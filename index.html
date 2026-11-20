@@ -23,7 +23,7 @@ h1{font-size:20px;margin:6px 2px 12px}
 .bar{height:12px;background:#e3e8f2;border-radius:6px;overflow:hidden;margin-top:10px}
 .fill{height:100%;background:#1f3864;border-radius:6px}
 .fill.red{background:#c62828}
-input[type=text],input[type=tel]{width:100%;box-sizing:border-box;font-size:22px;padding:12px;border:2px solid #cfd6e6;border-radius:12px;margin-top:8px}
+input[type=text],input[type=tel],input[type=date]{width:100%;box-sizing:border-box;font-size:22px;padding:12px;border:2px solid #cfd6e6;border-radius:12px;margin-top:8px}
 input.small{font-size:17px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .cat{padding:14px 6px;font-size:16px;border:2px solid #cfd6e6;background:#fff;color:#1f2a44;border-radius:12px}
@@ -67,6 +67,8 @@ input.small{font-size:17px}
   <div style="font-size:18px;font-weight:700">Ghi khoản chi</div>
   <input type="tel" id="amt" inputmode="numeric" placeholder="Số tiền (đồng)" autocomplete="off">
   <div class="grid" id="cats"></div>
+  <div class="lbl" style="margin-top:12px">Ngày chi</div>
+  <input type="date" class="small" id="dt">
   <input type="text" class="small" id="note" placeholder="Ghi chú (không bắt buộc)" autocomplete="off">
   <button class="go" id="go">Ghi chi tiêu</button>
   <div class="msg" id="msg"></div>
@@ -124,7 +126,7 @@ Runner.prototype._do = function(p){
   }).catch(function(){ self.f({ message: 'Không kết nối được. Kiểm tra mạng rồi thử lại.' }); });
 };
 Runner.prototype.getData = function(){ this._do({ action: 'data' }); };
-Runner.prototype.addExpense = function(note, cat, amount){ this._do({ action: 'add', note: note, cat: cat, amount: amount }); };
+Runner.prototype.addExpense = function(note, cat, amount, date){ this._do({ action: 'add', note: note, cat: cat, amount: amount, date: date }); };
 Runner.prototype.deleteExpense = function(row, ts){ this._do({ action: 'delete', row: row, ts: ts }); };
 var google = { script: {} };
 Object.defineProperty(google.script, 'run', { get: function(){ return new Runner(); } });
@@ -136,6 +138,7 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&
 
 function render(d){
   DATA = d;
+  var dtEl = el('dt'); dtEl.max = d.today; if (!dtEl.value) dtEl.value = d.today;
   var left = d.daily - d.todayTotal;
   var L = el('left');
   if (left >= 0){ L.className = 'big ok'; L.textContent = fmt(left) + ' đ'; }
@@ -223,12 +226,21 @@ function renderStats(d){
     var label = k.substring(8, 10) + '/' + k.substring(5, 7);
     var over = d.daily > 0 && sum > d.daily;
     var det = OPEN[k] ? '<div class="det">' + arr.slice().reverse().map(function(x){
-      return '<div><span>' + x.t + ' ' + esc(x.cat) + (x.note ? ' - ' + esc(x.note) : '') + '</span><b>' + fmt(x.amount) + '</b></div>';
+      var key = x.row + '_' + x.ts; var label = pendingDel === key ? 'Bấm lại để xóa' : 'Xóa'; return '<div><span>' + x.t + ' ' + esc(x.cat) + (x.note ? ' - ' + esc(x.note) : '') + '</span><span style="white-space:nowrap"><b>' + fmt(x.amount) + '</b><button class="del" data-r="' + x.row + '" data-t="' + x.ts + '">' + label + '</button></span></div>';
     }).join('') + '</div>' : '';
     return '<div class="day" data-k="' + k + '"><div class="dayhead" style="cursor:pointer"><span>' + label + (OPEN[k] ? ' ▲' : ' ▼') + '</span><b class="' + (over ? 'bad' : '') + '">' + fmt(sum) + ' đ' + '</b></div><div class="lbl" style="font-size:13px">Tối đa ' + fmt(d.daily) + ' đ · ' + (d.daily - sum >= 0 ? 'còn ' : 'vượt ') + fmt(Math.abs(d.daily - sum)) + ' đ · ' + (sum === 0 ? 'chưa ghi chi' : (over ? 'vượt mức' : 'trong mức')) + '</div>' + det + '</div>';
   }).join('') : '<div class="empty">Chưa có ngày nào có chi tiêu.</div>';
   Array.prototype.forEach.call(el('stDays').querySelectorAll('.day'), function(n){
     n.onclick = function(){ var k = n.getAttribute('data-k'); OPEN[k] = !OPEN[k]; renderStats(DATA); };
+  });
+  Array.prototype.forEach.call(el('stDays').querySelectorAll('.del'), function(b){
+    b.onclick = function(e){
+      e.stopPropagation();
+      var key = b.getAttribute('data-r') + '_' + b.getAttribute('data-t');
+      if (pendingDel !== key){ pendingDel = key; renderStats(DATA); return; }
+      pendingDel = '';
+      google.script.run.withSuccessHandler(render).withFailureHandler(fail).deleteExpense(Number(b.getAttribute('data-r')), Number(b.getAttribute('data-t')));
+    };
   });
 
   var tips = [];
@@ -334,10 +346,10 @@ el('go').onclick = function(){
   var btn = el('go'); btn.disabled = true; m.textContent = 'Đang ghi...';
   google.script.run.withSuccessHandler(function(d){
     render(d);
-    el('amt').value = ''; el('note').value = ''; SEL = '';
+    el('amt').value = ''; el('note').value = ''; SEL = ''; el('dt').value = d.today;
     Array.prototype.forEach.call(el('cats').children, function(x){ x.className = 'cat'; });
     btn.disabled = false; m.className = 'msg ok'; m.textContent = 'Đã ghi ' + fmt(amount) + ' đ';
-  }).withFailureHandler(fail).addExpense(el('note').value, SEL, amount);
+  }).withFailureHandler(fail).addExpense(el('note').value, SEL, amount, el('dt').value);
 };
 
 google.script.run.withSuccessHandler(render).withFailureHandler(fail).getData();
